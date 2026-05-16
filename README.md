@@ -1,0 +1,1 @@
+This repository is focused on creating an MCP server for Arena.AI website. Entirely built in Python.
