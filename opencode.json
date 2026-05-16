@@ -1,17 +1,16 @@
 {
   "$schema": "https://opencode.ai/config.json",
   "instructions": ["AGENTS.md"],
+  "experimental": {
+    "mcp_timeout": 60000
+  },
   "mcp": {
     "arena": {
       "type": "local",
       "command": [
-        "/Users/mahedjaved/Downloads/Miniconda3/envs/arena/bin/python",
-        "src/arena_mcp/server.py"
+        "/Users/mahedjaved/Downloads/AGENTIC/ArenaMCPProject/run_arena_server.sh"
       ],
-      "enabled": true,
-      "env": {
-        "PYTHONPATH": "/Users/mahedjaved/Downloads/AGENTIC/ArenaMCPProject/src"
-      }
+      "enabled": true
     }
   },
   "agent": {
