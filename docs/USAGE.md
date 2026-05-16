@@ -173,9 +173,9 @@ If any tool returns an error message (starting with "Error"), the server likely 
 1. Restart the MCP server (stop it with `Ctrl+C`, then start it again).
 2. Run the test script to isolate the issue:
    ```bash
-   PYTHONPATH=examples python examples/test_tools.py
+   PYTHONPATH=src pytest tests/ -v
    ```
-3. If the test script works but Claude Desktop does not, check your Claude Desktop configuration (see [Setup Guide](SETUP.md#step-6-configure-claude-desktop)).
+3. If the tests pass but Claude Desktop does not, check your Claude Desktop configuration (see [Setup Guide](SETUP.md#step-6-configure-claude-desktop)).
 
 ---
 

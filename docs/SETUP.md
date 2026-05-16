@@ -40,65 +40,54 @@ cd /path/to/ArenaMCPProject
 
 ---
 
-## Step 2: Create a virtual environment
+## Step 2: Create a conda environment
 
-A virtual environment is an isolated folder that holds all the Python packages for this project. You create one so the packages you install here do not conflict with packages in your other projects.
+A conda environment is an isolated folder that holds all the Python packages for this project. You create one so the packages you install here do not conflict with packages in your other projects.
 
 ```bash
-python3 -m venv venv
+conda create -n arena python=3.10
+conda activate arena
 ```
 
-This creates a folder called `venv/` in your project directory. It contains its own Python interpreter and package store.
-
-**Activate the virtual environment:**
-
-- On macOS / Linux:
-  ```bash
-  source venv/bin/activate
-  ```
-- On Windows:
-  ```bash
-  venv\Scripts\activate
-  ```
-
-After activation, your terminal prompt should show `(venv)` at the beginning, like this:
+This creates an environment called `arena` with Python 3.10. After activation, your terminal prompt should show `(arena)` at the beginning, like this:
 ```
-(venv) your-machine:project $
+(arena) your-machine:project $
 ```
+
+> **Why conda?** The project requires Python 3.10+ because the MCP SDK (v1.25+) does not support older Python versions. Conda makes it easy to switch between Python versions without affecting your system Python.
 
 ---
 
 ## Step 3: Install dependencies
 
-With the virtual environment activated, install the required packages:
+With the `arena` environment activated, install the required packages:
 
 ```bash
-pip install -r examples/requirements.txt
+pip install -r requirements.txt
 ```
 
-This reads `examples/requirements.txt` and installs everything the project needs: FastMCP (for the MCP server), httpx (for HTTP requests), pandas (for data handling), beautifulsoup4 (for HTML parsing), and others.
+This reads `requirements.txt` from the project root and installs everything the project needs: FastMCP (for the MCP server), httpx (for HTTP requests), pandas (for data handling), and others.
 
 **Why these packages?**
 
 | Package | Purpose |
 |---|---|
-| `mcp>=1.0.0` | The Model Context Protocol library. Turns your Python functions into tools AI agents can call. |
-| `httpx` | A modern HTTP client for Python. Used to fetch data from the Arena.ai leaderboard. |
-| `pydantic` | Validates data shapes (schemas). Keeps tool inputs clean. |
-| `beautifulsoup4` | Parses HTML. Useful if we scrape web pages for leaderboard data. |
+| `mcp>=1.25,<2` | The Model Context Protocol library. Turns your Python functions into tools AI agents can call. Pinned below v2 to avoid breaking changes. |
+| `httpx` | A modern HTTP client for Python. Ready to fetch data from the Arena.ai leaderboard in a future phase. |
 | `pandas` | Organizes data into tables (DataFrames). Makes sorting and filtering easy. |
-| `python-dotenv` | Loads environment variables from a `.env` file (for secrets like API keys). |
+| `pytest` | Runs the automated tests. |
+| `python-dotenv` | Loads environment variables from a `.env` file (for future secrets like API keys). |
 
 ---
 
 ## Step 4: Run the server for the first time
 
-The server lives in the `examples/` folder. To run it, you need to tell Python where to find the project's modules by setting the `PYTHONPATH` environment variable.
+The server lives in the `src/arena_mcp/` folder. To run it, you need to tell Python where to find the project's modules by setting the `PYTHONPATH` environment variable.
 
-From the project root directory (with your virtual environment activated), run:
+From the project root directory (with your `arena` environment activated), run:
 
 ```bash
-PYTHONPATH=examples python examples/server.py
+PYTHONPATH=src python src/arena_mcp/server.py
 ```
 
 **What is PYTHONPATH?** It tells Python which directories to search when you `import` a module. Without it, Python would not know where `arena_client.py` is when `server.py` tries to import it.
@@ -113,32 +102,31 @@ The server will remain running and listening for requests from your MCP client (
 
 ---
 
-## Step 5: Verify it works with a test script
+## Step 5: Verify it works with tests
 
-Open a **second terminal window**, navigate to the project root, activate the virtual environment again, and run:
+Run the automated test suite to confirm everything is working:
 
 ```bash
-source venv/bin/activate
-PYTHONPATH=examples python examples/test_tools.py
+conda activate arena
+PYTHONPATH=src pytest tests/ -v
 ```
 
 You should see output like:
 
 ```
-Testing ArenaClient...
+tests/test_arena_client.py::test_fetch_leaderboard_returns_dataframe PASSED
+tests/test_arena_client.py::test_get_top_models_returns_correct_limit PASSED
+tests/test_arena_client.py::test_get_model_details_finds_existing_model PASSED
+tests/test_arena_client.py::test_get_model_details_returns_none_for_an_unknown_model PASSED
+tests/test_server.py::test_get_leaderboard_returns_markdown PASSED
+tests/test_server.py::test_get_model_stats_found PASSED
+tests/test_server.py::test_get_model_stats_not_found PASSED
+tests/test_server.py::test_compare_models PASSED
 
-1. Fetching Top 5 Models:
-Rank 1: gpt-4o (1287)
-Rank 2: claude-3-5-sonnet (1271)
-Rank 3: gemini-1.5-pro (1265)
-Rank 4: gpt-4-turbo (1255)
-Rank 5: llama-3-70b (1210)
-
-2. Fetching 'gpt-4o' details:
-Found: {'Model': 'gpt-4o', 'Elo Rating': 1287, 'Rank': 1, 'Organization': 'OpenAI'}
+============================== 8 passed in 1.37s ===============================
 ```
 
-If you see this, everything is installed correctly and the client can fetch data.
+If all 8 tests pass, the code is working correctly.
 
 ---
 
@@ -164,10 +152,10 @@ Claude Desktop can connect to your MCP server so you can ask questions about the
        "arena": {
          "command": "python",
          "args": [
-           "[TODO: ABSOLUTE-PATH-TO-PROJECT]/examples/server.py"
+           "[TODO: ABSOLUTE-PATH-TO-PROJECT]/src/arena_mcp/server.py"
          ],
          "env": {
-           "PYTHONPATH": "[TODO: ABSOLUTE-PATH-TO-PROJECT]/examples"
+           "PYTHONPATH": "[TODO: ABSOLUTE-PATH-TO-PROJECT]/src"
          }
        }
      }
@@ -182,10 +170,10 @@ Claude Desktop can connect to your MCP server so you can ask questions about the
        "arena": {
          "command": "python",
          "args": [
-           "/Users/yourusername/projects/ArenaMCPProject/examples/server.py"
+           "/Users/yourusername/ArenaMCPProject/src/arena_mcp/server.py"
          ],
          "env": {
-           "PYTHONPATH": "/Users/yourusername/projects/ArenaMCPProject/examples"
+           "PYTHONPATH": "/Users/yourusername/ArenaMCPProject/src"
          }
        }
      }
@@ -204,15 +192,15 @@ Claude Desktop can connect to your MCP server so you can ask questions about the
 
 ### "ModuleNotFoundError: No module named 'mcp'"
 
-**Cause:** The virtual environment is not activated, or you skipped the `pip install` step.
+**Cause:** The conda environment is not activated, or you skipped the `pip install` step.
 
-**Fix:** Make sure your terminal shows `(venv)` in the prompt. If not, activate it:
+**Fix:** Make sure your terminal shows `(arena)` in the prompt. If not, activate it:
 ```bash
-source venv/bin/activate
+conda activate arena
 ```
 Then install dependencies:
 ```bash
-pip install -r examples/requirements.txt
+pip install -r requirements.txt
 ```
 
 ### "ModuleNotFoundError: No module named 'arena_client'" or "ImportError: attempted relative import"
@@ -221,18 +209,18 @@ pip install -r examples/requirements.txt
 
 **Fix:** Make sure you are running from the project root with PYTHONPATH set:
 ```bash
-PYTHONPATH=examples python examples/server.py
+PYTHONPATH=src python src/arena_mcp/server.py
 ```
 Or set it permanently in your shell:
 ```bash
-export PYTHONPATH=/absolute/path/to/project/examples
+export PYTHONPATH=/absolute/path/to/project/src
 ```
 
 ### Server starts but Claude Desktop says "Connection failed"
 
 **Cause:** The path in `claude_desktop_config.json` is wrong or relative.
 
-**Fix:** Double-check the `args` path in the config file. It must be an absolute path. Also verify the `PYTHONPATH` in the `env` block is the absolute path to the `examples/` directory.
+**Fix:** Double-check the `args` path in the config file. It must be an absolute path. Also verify the `PYTHONPATH` in the `env` block is the absolute path to the `src/` directory.
 
 ### "Port in use" or "Address already in use"
 

@@ -8,53 +8,72 @@
 
 ```
 ArenaMCPProject/
-  examples/
-    server.py          -- The MCP server entry point (registers and runs the tools)
-    arena_client.py    -- Fetches and returns data (the "data layer")
-    test_tools.py      -- A simple test script to verify the client works
-    requirements.txt   -- Lists all Python packages needed
+  src/
+    __init__.py            -- Makes src/ a Python package
+    arena_mcp/
+      __init__.py          -- Makes arena_mcp/ a Python package
+      arena_client.py      -- Fetches and returns data (the "data layer")
+      server.py            -- The MCP server entry point (registers and runs the tools)
+  tests/
+    __init__.py            -- Makes tests/ a Python package
+    test_arena_client.py   -- Tests for the data layer
+    test_server.py         -- Tests for the MCP server tools
   docs/
-    SETUP.md           -- Step-by-step installation guide
-    USAGE.md           -- How to use the tools with example prompts
-    ARCHITECTURE.md    -- This file
-  notes/               -- Design notes and reports
-  AGENTS.md            -- Instructions for AI coding agents
-  README.md            -- Project overview
+    SETUP.md               -- Step-by-step installation guide
+    USAGE.md               -- How to use the tools with example prompts
+    ARCHITECTURE.md        -- This file
+  notes/
+    glossary.md            -- Project jargon explained
+  examples/                -- Original prototype (reference only)
+  requirements.txt         -- Lists all Python packages needed
+  AGENTS.md                -- Instructions for AI coding agents
 ```
-
-The production code will eventually live in a `src/` folder, but the current working prototype lives in `examples/`.
 
 ---
 
 ## File-by-file explanation
 
-### `server.py` -- The MCP entry point
+### `src/arena_mcp/server.py` -- The MCP entry point
+
+**Path:** `src/arena_mcp/server.py`
 
 This is the file that MCP clients (like Claude Desktop) connect to. It uses the FastMCP library to:
 
 1. Create an MCP server named "ArenaExplorer".
 2. Register three tools (`get_leaderboard`, `get_model_stats`, `compare_models`) by decorating functions with `@mcp.tool()`.
-3. Start listening for incoming requests.
+3. Start listening for incoming requests via stdio transport.
 
 **Why this file exists on its own:** It is the glue between the AI agent (Claude) and the data (leaderboard). It does not fetch data itself. It only defines what tools exist and what parameters they accept. This separation means you could swap out the data source without changing the tool definitions.
 
 **Key concept -- `@mcp.tool()`:** When you add this decorator to a Python function, FastMCP automatically generates a tool description for the AI. The function's docstring becomes the tool description, and the function parameters become the tool's input fields. The AI reads these and decides when to call each tool.
 
-### `arena_client.py` -- The data layer
+### `src/arena_mcp/arena_client.py` -- The data layer
+
+**Path:** `src/arena_mcp/arena_client.py`
 
 This file contains the `ArenaClient` class. Its job is to provide data to the tools. It has three main methods:
 
 - `fetch_leaderboard()` -- Returns a pandas DataFrame of all models.
 - `get_top_models(limit)` -- Returns the top N models as a list of dictionaries.
-- `get_model_details(model_name)` -- Returns a single model's data as a dictionary.
+- `get_model_details(model_name)` -- Returns a single model's data as a dictionary (case-insensitive exact match).
 
 **Why separate this from server.py?** Because the data source might change. Today it uses mock data. Tomorrow it might scrape a website. Next month it might call a real API. By keeping the data logic in its own file, you can change how data is fetched without touching the tool definitions in `server.py`.
 
 **What is the MOCK_DATA?** In `arena_client.py`, there is a dictionary called `MOCK_DATA` with 10 models, their Elo scores, ranks, and organizations. This is static data -- it never changes. We use it so beginners can test the server without needing internet access or API keys.
 
-### `test_tools.py` -- The verification script
+### `tests/` -- The automated tests
 
-A quick script that imports `ArenaClient` and calls its methods. You run it to confirm the client works before attaching it to Claude Desktop.
+**Path:** `tests/test_arena_client.py` and `tests/test_server.py`
+
+The project uses `pytest` for testing. There are 8 tests total:
+
+- 4 tests for `arena_client.py` (checks DataFrame shape, return limits, model lookup, and the "not found" edge case)
+- 4 tests for `server.py` (checks markdown formatting, model stats output, error handling, and comparison verdict)
+
+Tests are run with:
+```bash
+PYTHONPATH=src pytest tests/ -v
+```
 
 ### `requirements.txt` -- The dependency list
 
@@ -78,7 +97,7 @@ You ask: "What are the top 5 AI models?"
     7. fetch_leaderboard returns the mock data as a pandas DataFrame.
     8. get_top_models sorts by rank, takes the first 5, returns them as a list.
     9. get_leaderboard formats the list into a markdown table string.
-    10. server.py sends the markdown string back to Claude via MCP.
+    10. server.py sends the markdown string back to Claude via MCP (stdio).
     11. Claude displays the table in your chat window.
 
 Total: 11 steps, but it happens in under a second.
@@ -180,15 +199,14 @@ All three tools use the same underlying `ArenaClient` instance, which means they
 
 ---
 
-## What comes next (future architecture)
+## What comes next (future phases)
 
-As the project grows, you may see these additions:
+The MVP is complete with `src/arena_mcp/` and `tests/`. Future additions may include:
 
-- **`src/` folder** -- Production code moved out of `examples/` into a proper package structure.
-- **`tools.py`** -- Tool function definitions separated from `server.py` for cleaner organization.
+- **`tools.py`** -- Tool function definitions separated from `server.py` for cleaner organization (currently the tools are inline in `server.py`).
 - **`schemas.py`** -- Pydantic models that validate tool inputs (e.g., ensuring `model_name` is a non-empty string).
 - **`config.py`** -- Centralized configuration (timeouts, URLs, API keys) loaded from environment variables.
-- **Live data fetching** -- `fetch_leaderboard()` will make real HTTP requests to Arena.ai instead of returning mock data.
+- **Live data fetching** -- `fetch_leaderboard()` will make real HTTP requests to Arena.ai (via HuggingFace dataset `lmarena-ai/leaderboard-dataset`) instead of returning mock data.
 - **HTTP transport** -- The server may support HTTP/SSE in addition to stdio, allowing remote connections.
 
 The project is designed to grow into these additions naturally. Each new piece fits into the existing separation of concerns without requiring a rewrite.
