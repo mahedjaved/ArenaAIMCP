@@ -1,6 +1,19 @@
 {
   "$schema": "https://opencode.ai/config.json",
   "instructions": ["AGENTS.md"],
+  "mcp": {
+    "arena": {
+      "type": "local",
+      "command": [
+        "/Users/mahedjaved/Downloads/Miniconda3/envs/arena/bin/python",
+        "src/arena_mcp/server.py"
+      ],
+      "enabled": true,
+      "env": {
+        "PYTHONPATH": "/Users/mahedjaved/Downloads/AGENTIC/ArenaMCPProject/src"
+      }
+    }
+  },
   "agent": {
     "orchestrator": {
       "description": "Primary guide and coordinator. Gives the user the next small step, provides scaffolding, waits for the user to implement it, then routes to review and next tasks.",
