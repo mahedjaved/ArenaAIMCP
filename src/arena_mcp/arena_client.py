@@ -4,7 +4,9 @@ Client for fetching Arena.ai leaderboard data
 
 import httpx
 import pandas as pd
+from .schemas import ModelEntry
 from typing import List, Dict, Optional
+
 
 class ArenaClient:
     """
@@ -50,22 +52,30 @@ class ArenaClient:
         Returns leaderboard data as a DataFrame (currently mock data)
         """
         return pd.DataFrame(self.MOCK_DATA)
-    
-    def get_top_models(self, limit: int = 10) -> List[Dict]:
+
+    def get_top_models(self, limit: int = 10) -> List[ModelEntry]:
         """
         Returns the top N models sorted by rank.
         """
         df = self.fetch_leaderboard()
         top_df = df.sort_values(by="Rank").head(limit)
         # records are list like (e.g. ‘records’ : [{column -> value}, … , {column -> value}])
-        return top_df.to_dict(orient="records")
-    
-    def get_model_details(self, model_name: str) -> Optional[Dict]:
+        top_df = top_df.to_dict(orient="records")
+        entries = []
+        for entry in top_df:
+            entries.append(ModelEntry(
+                model=entry['Model'], elo_rating=entry['Elo Rating'], rank=entry['Rank'], organization=entry['Organization']))
+        return entries
+
+    def get_model_details(self, model_name: str) -> Optional[ModelEntry]:
         """
         Returns details for the a specific model.
         """
         df = self.fetch_leaderboard()
         match = df[df["Model"].str.lower() == model_name.lower()]
         if not match.empty:
-            return match.iloc[0].to_dict()
+            match = match.iloc[0].to_dict()
+            return ModelEntry(
+                model=match['Model'], elo_rating=match['Elo Rating'], rank=match['Rank'], organization=match['Organization'])
+
         return None

@@ -20,7 +20,7 @@ def test_get_top_models_returns_correct_limit():
     client = ArenaClient()
     result = client.get_top_models(3)
     assert len(result) == 3
-    assert result[0]["Rank"] == 1  # Rank 1 for the best model
+    assert result[0].rank == 1  # Rank 1 for the best model
 
 # Test 3: Test Get Models Details Finds Existing Model
 def test_get_model_details_finds_existing_model():
@@ -28,9 +28,9 @@ def test_get_model_details_finds_existing_model():
     client = ArenaClient()
     result = client.get_model_details("gpt-4o")
     assert result is not None
-    assert result["Model"] == "gpt-4o"
-    assert result["Elo Rating"] == 1287
-    assert result["Rank"] == 1
+    assert result.model == "gpt-4o"
+    assert result.elo_rating == 1287
+    assert result.rank == 1
 
 # Test 4: Test Get Model Details Returns None For Unknown
 def test_get_model_details_returns_none_for_an_unknown_model():

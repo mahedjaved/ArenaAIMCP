@@ -23,7 +23,7 @@ def get_leaderboard(limit: int = 10) -> str:
         output = "# Chatbot Arena Leaderboard\n\n"
         output += "| Rank | Model | Elo | Org |\n| :--- | :--- | :--- | :--- |\n"
         for m in models:
-            output += f"| {m['Rank']} | {m['Model']} | {m['Elo Rating']} | {m['Organization']} |\n"
+            output += f"| {m.rank} | {m.model} | {m.elo_rating} | {m.organization} |\n"
         return output
     except Exception as e:
         return f"Error fetching leaderboard data: {str(e)}"
@@ -40,10 +40,10 @@ def get_model_stats(model_name: str) -> str:
         details = arena.get_model_details(model_name)
         if details:
             return (
-                f"# Stats for {details['Model']}\n\n"
-                f"- **Rank:** {details['Rank']}\n"
-                f"- **Elo Rating:** {details['Elo Rating']}\n"
-                f"- **Organization:** {details['Organization']}\n"
+                f"# Stats for {details.model}\n\n"
+                f"- **Rank:** {details.rank}\n"
+                f"- **Elo Rating:** {details.elo_rating}\n"
+                f"- **Organization:** {details.organization}\n"
             )
         return f"Model '{model_name}' not found."
     except Exception as e:
@@ -67,16 +67,16 @@ def compare_models(model_a: str, model_b: str) -> str:
             return f"Model '{model_b}' was not found"
         
         # compute difference of Elo rating
-        diff = a["Elo Rating"] - b["Elo Rating"]
-        winner = a["Model"] if diff > 0 else b["Model"]
+        diff = a.elo_rating - b.elo_rating
+        winner = a.model if diff > 0 else b.model
 
         return (
-            f"# Comparison: {a['Model']} vs {b['Model']}\n\n"
-            f"| Feature | {a['Model']} | {b['Model']} |\n"
+            f"# Comparison: {a.model} vs {b.model}\n\n"
+            f"| Feature | {a.model} | {b.model} |\n"
             f"| :--- | :--- | :--- |\n"
-            f"| Rank | {a['Rank']} | {b['Rank']} |\n"
-            f"| Elo | {a['Elo Rating']} | {b['Elo Rating']} |\n"
-            f"| Org | {a['Organization']} | {b['Organization']} |\n"
+            f"| Rank | {a.rank} | {b.rank} |\n"
+            f"| Elo | {a.elo_rating} | {b.elo_rating} |\n"
+            f"| Org | {a.organization} | {b.organization} |\n"
             f"\n**Verdict:** {winner} is ranked higher by {abs(diff)} Elo points."
         )
 
